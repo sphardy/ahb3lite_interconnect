@@ -11,6 +11,9 @@ The Multi-layer Interconnect supports priority and round-robin based arbitration
 
 ![System Diagram][]{: .center-max}
 
+**Multi-layer Interconnect Usage Example**
+{: .center}
+
 ## Features
 
 - AMBA AHB-Lite compatible
