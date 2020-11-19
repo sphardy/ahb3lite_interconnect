@@ -18,9 +18,9 @@ echo -e "\nGenerating markdown for $topfile...\n"
 # Run from markdown directory only
 curdir=${PWD##*/}
 
-if [ "$curdir" != "markdown" ]
+if [ "$curdir" != "markdown" ] || [ ! -d "scripts" ] || [ ! -d "config" ]
 then
-	echo "Must run from markdown directory"
+	echo "Must run from project markdown directory"
 	exit 2
 fi
 
@@ -34,14 +34,14 @@ echo -e "Generate markdown compatible LaTeX source...\n"
 for entry in ../tex/*.tex
 do
 	base="tex/${entry##*/}"
-	./lpp.pl $entry > $base
+	./scripts/lpp.pl $entry > $base
 done
 
 # Generate new Markdown
 
 echo -e "Convert LaTeX to Markdown...\n"
 # conversion options stored in markdown.yaml
-pandoc --defaults markdown ../$topfile.tex > $topfile.tmp 
+pandoc --defaults config/latex2markdown ../$topfile.tex > $topfile.tmp 
 
 # Process Captions
 echo -e "Updating markdown captions:\n"
@@ -89,6 +89,6 @@ done < $topfile.tmp
 # Remove Preprocessed LaTeX source & install processed markdown
 echo -e "\nCleaning Up...\n"
 cp $topfile.md ../$topfile.md
-rm -rf tex/* $topfile.tmp $topfile.md
+rm -rf tex $topfile.tmp $topfile.md
 
 echo "Done!"
