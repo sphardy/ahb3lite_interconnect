@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-# Usage: create_markdown.sg <top level file>
+# Usage: create_markdown.sh <top level file>
 
 set -e
 
@@ -43,21 +43,47 @@ echo -e "Convert LaTeX to Markdown...\n"
 # conversion options stored in markdown.yaml
 pandoc --defaults markdown ../$topfile.tex > $topfile.tmp 
 
-# Process Table Captions
-echo Updating markdown table captions:
+# Process Captions
+echo -e "Updating markdown captions:\n"
 
 if [ -f $topfile.md ]; then 
 	rm $topfile.md
 fi
 
+tableindex=0
+figindex=0
+
 IFS=''
 while read -r line || [[ -n "${line}" ]]; do
-	if [ "${line:0:2}" == ": " ]; then
-		echo "  " $line
-		echo "<p align=center><strong>Table${line}</strong></p>" >> $topfile.md
-	else
-		echo ${line} >> $topfile.md
-	fi
+
+	case ${line:0:2} in
+
+    ": ") # Table Caption
+			echo "  Table" $((++tableindex))$line
+			echo "<p align=center><strong>Table ${tableindex}${line}</strong></p>" >> $topfile.md
+			;;
+
+		"<f") # Figure Caption
+			# Write current line to output & read next line
+			echo ${line} >> $topfile.md
+			read -r line
+
+			# Verify line is an image
+			if [ ${line:0:4} != "<img" ]; then 
+				# Write line and continue
+				echo ${line} >> $topfile.md 
+			else
+				# Filter tag <figcaption aria-hidden="true"> → <figcaption aria-hidden="true">Fig #:
+				echo "  Figure" $((++figindex))
+				echo ${line//<figcaption aria-hidden=\"true\">/<figcaption aria-hidden=\"true\">Figure ${figindex}: } >> $topfile.md
+			fi
+	  	;;
+
+  	*) # Default = write line to output
+			echo ${line} >> $topfile.md
+	  	;;
+
+	esac
 done < $topfile.tmp
 
 # Remove Preprocessed LaTeX source & install processed markdown
